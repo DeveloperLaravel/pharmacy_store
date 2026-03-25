@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -23,42 +24,51 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Users';
 
-    protected static ?string $pluralModelLabel = 'Users';
+    protected static ?string $navigationGroup = 'User Management';
 
     // ================= FORM =================
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
+        return $form->schema([
 
-                TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
+            Section::make('User Info')
+                ->schema([
 
-                TextInput::make('email')
-                    ->email()
-                    ->required()
-                    ->unique(ignoreRecord: true),
+                    TextInput::make('name')
+                        ->required()
+                        ->maxLength(255),
 
-                TextInput::make('password')
-                    ->password()
-                    ->required(fn ($record) => $record === null) // required only on create
-                    ->dehydrated(fn ($state) => filled($state))
-                    ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                    ->label('Password'),
+                    TextInput::make('email')
+                        ->email()
+                        ->required()
+                        ->unique(ignoreRecord: true),
 
-                Select::make('role')
-                    ->options([
-                        'admin' => 'Admin',
-                        'user' => 'User',
-                    ])
-                    ->required(),
+                    TextInput::make('password')
+                        ->password()
+                        ->required(fn ($record) => $record === null)
+                        ->dehydrated(fn ($state) => filled($state))
+                        ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                        ->label('Password'),
 
-                Toggle::make('is_active')
-                    ->label('Active')
-                    ->default(true),
+                ])->columns(2),
 
-            ]);
+            Section::make('Roles & Status')
+                ->schema([
+
+                    Select::make('roles')
+                        ->relationship('roles', 'name')
+                        ->multiple()
+                        ->preload()
+                        ->searchable()
+                        ->label('Roles')
+                        ->required(),
+
+                    Toggle::make('is_active')
+                        ->label('Active')
+                        ->default(true),
+
+                ]),
+        ]);
     }
 
     // ================= TABLE =================
@@ -72,17 +82,21 @@ class UserResource extends Resource
 
                 TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold'),
 
                 TextColumn::make('email')
                     ->searchable(),
 
-                TextColumn::make('role')
+                TextColumn::make('roles.name')
                     ->badge()
-                    ->color(fn ($state) => $state === 'admin' ? 'danger' : 'success'),
+                    ->color('primary')
+                    ->label('Roles')
+                    ->formatStateUsing(fn ($state) => ucfirst($state)),
 
                 IconColumn::make('is_active')
-                    ->boolean(),
+                    ->boolean()
+                    ->label('Active'),
 
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -91,25 +105,36 @@ class UserResource extends Resource
             ])
 
             ->filters([
-                Tables\Filters\SelectFilter::make('role')
-                    ->options([
-                        'admin' => 'Admin',
-                        'user' => 'User',
-                    ]),
+
+                Tables\Filters\SelectFilter::make('roles')
+                    ->relationship('roles', 'name')
+                    ->label('Filter by Role'),
 
                 Tables\Filters\TernaryFilter::make('is_active'),
+
             ])
 
             ->actions([
+
                 Tables\Actions\ViewAction::make(),
+
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+
+                Tables\Actions\DeleteAction::make()
+                    ->before(function ($record) {
+                        if ($record->hasRole('admin')) {
+                            throw new \Exception('لا يمكن حذف مستخدم Admin');
+                        }
+                    }),
+
             ])
 
             ->bulkActions([
+
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+
             ]);
     }
 
