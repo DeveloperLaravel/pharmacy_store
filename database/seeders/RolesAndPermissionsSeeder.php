@@ -51,11 +51,11 @@ class RolesAndPermissionsSeeder extends Seeder
             // 'edit medicines',
             // 'delete medicines',
 
-            // Stock
-            // 'view stock',
-            // 'create stock',
-            // 'edit stock',
-            // 'delete stock',
+            // department
+            'view department',
+            'create department',
+            'edit department',
+            'delete department',
         ];
 
         // إنشاء Permissions

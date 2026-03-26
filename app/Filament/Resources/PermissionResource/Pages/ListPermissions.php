@@ -13,7 +13,9 @@ class ListPermissions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->visible(fn (): bool => PermissionResource::canCreate()
+                ),
         ];
     }
 }

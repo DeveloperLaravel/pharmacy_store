@@ -13,9 +13,9 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
-            // ->visible(fn (): bool => UserResource::canCreate()
-            // ),
+            Actions\CreateAction::make()
+                ->visible(fn (): bool => UserResource::canCreate()
+                ),
         ];
     }
 }
