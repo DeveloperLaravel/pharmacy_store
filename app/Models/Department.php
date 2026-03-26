@@ -18,4 +18,14 @@ class Department extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function doctors()
+    {
+        return $this->hasMany(Doctor::class);
+    }
+
+    public function nurses()
+    {
+        return $this->hasMany(Nurses::class);
+    }
 }

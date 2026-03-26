@@ -9,6 +9,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
 
 class PermissionResource extends Resource
@@ -73,5 +74,34 @@ class PermissionResource extends Resource
             'create' => PermissionResource\Pages\CreatePermission::route('/create'),
             'edit' => PermissionResource\Pages\EditPermission::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('view permissions') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('create permissions') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('edit permissions') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        if ((int) $record->id === (int) Auth::id()) {
+            return false;
+        }
+
+        return Auth::user()?->can('delete permissions') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('delete permissions') ?? false;
     }
 }

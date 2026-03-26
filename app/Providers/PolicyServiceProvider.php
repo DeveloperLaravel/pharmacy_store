@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Department;
+use App\Models\Doctor;
 use App\Models\User;
 use App\Policies\DepartmentPolicy;
+use App\Policies\DoctorPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
@@ -30,7 +32,7 @@ class PolicyServiceProvider extends ServiceProvider
     {
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Department::class, DepartmentPolicy::class);
-        // Gate::policy(Medicine::class, MedicinePolicy::class);
+        Gate::policy(Doctor::class, DoctorPolicy::class);
         // Gate::policy(StockMovement::class, StockMovementPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Permission::class, PermissionPolicy::class);
