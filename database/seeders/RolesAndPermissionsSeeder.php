@@ -10,19 +10,24 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
-    /**
-     * Seed roles and permissions and attach them to users.
-     */
     public function run(): void
     {
+        // تنظيف الكاش
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Permissions (مقسمة بشكل احترافي)
+        |--------------------------------------------------------------------------
+        */
         $permissions = [
-            // Roles & permissions management
+
+            // Roles & Permissions
             'view roles',
             'create roles',
             'edit roles',
             'delete roles',
+
             'view permissions',
             'create permissions',
             'edit permissions',
@@ -35,68 +40,98 @@ class RolesAndPermissionsSeeder extends Seeder
             'delete users',
 
             // Categories
-            'view categories',
-            'create categories',
-            'edit categories',
-            'delete categories',
+            // 'view categories',
+            // 'create categories',
+            // 'edit categories',
+            // 'delete categories',
 
             // Medicines
-            'view medicines',
-            'create medicines',
-            'edit medicines',
-            'delete medicines',
+            // 'view medicines',
+            // 'create medicines',
+            // 'edit medicines',
+            // 'delete medicines',
 
-            // Stock movements
-            'view stock-movements',
-            'create stock-movements',
-            'edit stock-movements',
-            'delete stock-movements',
+            // Stock
+            // 'view stock',
+            // 'create stock',
+            // 'edit stock',
+            // 'delete stock',
         ];
 
-        foreach ($permissions as $permissionName) {
+        // إنشاء Permissions
+        foreach ($permissions as $permission) {
             Permission::firstOrCreate([
-                'name' => $permissionName,
+                'name' => $permission,
                 'guard_name' => 'web',
             ]);
         }
 
-        $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
-        $pharmacist = Role::firstOrCreate(['name' => 'pharmacist', 'guard_name' => 'web']);
-        $inventoryManager = Role::firstOrCreate(['name' => 'inventory-manager', 'guard_name' => 'web']);
+        /*
+        |--------------------------------------------------------------------------
+        | Roles
+        |--------------------------------------------------------------------------
+        */
+        $roles = [
+            'super-admin',
+            'admin',
+            'pharmacist',
+            'inventory-manager',
+        ];
 
-        $superAdmin->syncPermissions(Permission::all());
+        foreach ($roles as $role) {
+            Role::firstOrCreate([
+                'name' => $role,
+                'guard_name' => 'web',
+            ]);
+        }
 
-        $pharmacist->syncPermissions([
+        /*
+        |--------------------------------------------------------------------------
+        | Assign Permissions to Roles
+        |--------------------------------------------------------------------------
+        */
+
+        // Super Admin -> كل شيء
+        Role::findByName('super-admin')->syncPermissions(Permission::all());
+
+        // Admin
+        Role::findByName('admin')->syncPermissions([
             'view users',
-            'view categories',
+            'create users',
+            'edit users',
+            'delete users',
+        ]);
+
+        // Pharmacist
+        Role::findByName('pharmacist')->syncPermissions([
             'view medicines',
             'create medicines',
             'edit medicines',
-            'view stock-movements',
-            'create stock-movements',
+            'view stock',
+            'create stock',
         ]);
 
-        $inventoryManager->syncPermissions([
-            'view users',
-            'view categories',
-            'view medicines',
-            'edit medicines',
-            'view stock-movements',
-            'create stock-movements',
-            'edit stock-movements',
-            'delete stock-movements',
+        // Inventory Manager
+        Role::findByName('inventory-manager')->syncPermissions([
+            'view stock',
+            'create stock',
+            'edit stock',
+            'delete stock',
         ]);
 
-        $adminUser = User::query()
-            ->where('email', 'admin@admin.com')
-            ->first();
+        /*
+        |--------------------------------------------------------------------------
+        | Assign Role to User
+        |--------------------------------------------------------------------------
+        */
+        $user = User::where('email', 'admin@admin.com')->first();
 
-        if (! $adminUser) {
-            $adminUser = User::query()->first();
+        if (! $user) {
+            $user = User::first();
         }
 
-        if ($adminUser) {
-            $adminUser->assignRole('super-admin');
+        if ($user) {
+            $user->assignRole('super-admin');
         }
     }
 }

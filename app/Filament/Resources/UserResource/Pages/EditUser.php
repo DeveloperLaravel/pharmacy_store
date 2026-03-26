@@ -13,8 +13,8 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make()
-                ->visible(fn (): bool => UserResource::canDelete($this->record)),
+            Actions\DeleteAction::make(),
+            // ->visible(fn (): bool => UserResource::canDelete($this->record)),
         ];
     }
 }

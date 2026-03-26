@@ -127,14 +127,14 @@ class UserResource extends Resource
                     ->preload(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (User $record): bool => static::canEdit($record)),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (User $record): bool => static::canDelete($record)),
+                Tables\Actions\EditAction::make(),
+                // ->visible(fn (User $record): bool => static::canEdit($record)),
+                Tables\Actions\DeleteAction::make(),
+                // ->visible(fn (User $record): bool => static::canDelete($record)),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn (): bool => static::canDeleteAny()),
+                Tables\Actions\DeleteBulkAction::make(),
+                // ->visible(fn (): bool => static::canDeleteAny()),
             ])
             ->modifyQueryUsing(fn (Builder $query) => $query->with('roles'));
     }
@@ -153,32 +153,32 @@ class UserResource extends Resource
         ];
     }
 
-    public static function canViewAny(): bool
-    {
-        return Auth::user()?->can('view users') ?? false;
-    }
+    // public static function canViewAny(): bool
+    // {
+    //     return Auth::user()?->can('view users') ?? false;
+    // }
 
-    public static function canCreate(): bool
-    {
-        return Auth::user()?->can('create users') ?? false;
-    }
+    // public static function canCreate(): bool
+    // {
+    //     return Auth::user()?->can('create users') ?? false;
+    // }
 
-    public static function canEdit($record): bool
-    {
-        return Auth::user()?->can('edit users') ?? false;
-    }
+    // public static function canEdit($record): bool
+    // {
+    //     return Auth::user()?->can('edit users') ?? false;
+    // }
 
-    public static function canDelete($record): bool
-    {
-        if ((int) $record->id === (int) Auth::id()) {
-            return false;
-        }
+    // public static function canDelete($record): bool
+    // {
+    //     if ((int) $record->id === (int) Auth::id()) {
+    //         return false;
+    //     }
 
-        return Auth::user()?->can('delete users') ?? false;
-    }
+    //     return Auth::user()?->can('delete users') ?? false;
+    // }
 
-    public static function canDeleteAny(): bool
-    {
-        return Auth::user()?->can('delete users') ?? false;
-    }
+    // public static function canDeleteAny(): bool
+    // {
+    //     return Auth::user()?->can('delete users') ?? false;
+    // }
 }
