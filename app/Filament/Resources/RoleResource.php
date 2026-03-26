@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
 class RoleResource extends Resource
@@ -18,9 +19,9 @@ class RoleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationLabel = 'Roles';
+    protected static ?string $navigationLabel = 'الأدوار';
 
-    protected static ?string $navigationGroup = 'User Management';
+    protected static ?string $navigationGroup = 'إدارة المستخدمين';
 
     public static function form(Form $form): Form
     {
@@ -29,7 +30,7 @@ class RoleResource extends Resource
             Card::make()->schema([
 
                 TextInput::make('name')
-                    ->label('Role Name')
+                    ->label('اسم الدور')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->placeholder('مثال: admin'),
@@ -39,7 +40,7 @@ class RoleResource extends Resource
                     ->columns(3)
                     ->searchable()
                     ->bulkToggleable()
-                    ->label('Permissions'),
+                    ->label('الصلاحيات'),
 
             ]),
         ]);
@@ -49,7 +50,6 @@ class RoleResource extends Resource
     {
         return $table
             ->columns([
-
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
@@ -58,27 +58,59 @@ class RoleResource extends Resource
 
                 TextColumn::make('permissions_count')
                     ->counts('permissions')
-                    ->label('Permissions')
+                    ->label('الصلاحيات')
                     ->badge()
                     ->color('info'),
 
                 TextColumn::make('created_at')
                     ->dateTime()
-                    ->label('Created'),
-
+                    ->label('تاريخ الإنشاء')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn () => static::canEdit(null)),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn () => static::canDelete(null)),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->visible(fn () => static::canDeleteAny()),
             ]);
     }
 
     public static function getRelations(): array
     {
         return [];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('view roles') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('create roles') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('edit roles') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::user()?->can('delete roles') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('delete roles') ?? false;
     }
 
     public static function getPages(): array

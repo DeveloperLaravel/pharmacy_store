@@ -17,13 +17,13 @@ class PermissionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-key';
 
-    protected static ?string $navigationGroup = 'User Management';
+    protected static ?string $navigationGroup = 'إدارة المستخدمين';
 
     public static function form(Form $form): Form
     {
         return $form->schema([
 
-            Section::make('Permission Info')
+            Section::make('بيانات الصلاحية')
                 ->schema([
 
                     TextInput::make('name')
@@ -48,6 +48,7 @@ class PermissionResource extends Resource
                     ->searchable(),
 
                 TextColumn::make('created_at')
+                    ->label('تاريخ الإنشاء')
                     ->dateTime()
                     ->sortable(),
 

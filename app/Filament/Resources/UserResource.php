@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
-use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -13,8 +13,13 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class UserResource extends Resource
 {
@@ -22,129 +27,123 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'Users';
+    protected static ?string $navigationLabel = 'المستخدمون';
 
-    protected static ?string $navigationGroup = 'User Management';
+    protected static ?string $navigationGroup = 'إدارة المستخدمين';
 
-    // ================= FORM =================
+    protected static ?int $navigationSort = 1;
+
     public static function form(Form $form): Form
     {
-        return $form->schema([
-
-            Section::make('User Info')
-                ->schema([
-
+        return $form
+            ->schema([
+                Card::make()->schema([
                     TextInput::make('name')
+                        ->label('الاسم الكامل')
                         ->required()
                         ->maxLength(255),
 
                     TextInput::make('email')
+                        ->label('البريد الإلكتروني')
                         ->email()
                         ->required()
-                        ->unique(ignoreRecord: true),
+                        ->unique(ignoreRecord: true)
+                        ->maxLength(255),
 
                     TextInput::make('password')
+                        ->label('كلمة المرور')
                         ->password()
-                        ->required(fn ($record) => $record === null)
-                        ->dehydrated(fn ($state) => filled($state))
-                        ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                        ->label('Password'),
+                        ->revealable()
+                        ->rule(Password::defaults())
+                        ->required(fn (string $operation): bool => $operation === 'create')
+                        ->dehydrated(fn (?string $state): bool => filled($state))
+                        ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
+                        ->same('password_confirmation'),
 
-                ])->columns(2),
+                    TextInput::make('password_confirmation')
+                        ->label('تأكيد كلمة المرور')
+                        ->password()
+                        ->revealable()
+                        ->required(fn (string $operation): bool => $operation === 'create')
+                        ->dehydrated(false),
 
-            Section::make('Roles & Status')
-                ->schema([
+                    Toggle::make('is_active')
+                        ->label('نشط')
+                        ->default(true)
+                        ->inline(false),
 
                     Select::make('roles')
+                        ->label('الأدوار')
                         ->relationship('roles', 'name')
                         ->multiple()
                         ->preload()
-                        ->searchable()
-                        ->label('Roles')
-                        ->required(),
-
-                    Toggle::make('is_active')
-                        ->label('Active')
-                        ->default(true),
-
-                ]),
-        ]);
+                        ->searchable(),
+                ])->columns(2),
+            ]);
     }
 
-    // ================= TABLE =================
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-
-                TextColumn::make('id')
-                    ->sortable(),
-
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('medium'),
 
                 TextColumn::make('email')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->copyable(),
 
                 TextColumn::make('roles.name')
+                    ->label('الأدوار')
                     ->badge()
-                    ->color('primary')
-                    ->label('Roles')
-                    ->formatStateUsing(fn ($state) => ucfirst($state)),
+                    ->separator(',')
+                    ->color('info'),
 
                 IconColumn::make('is_active')
+                    ->label('نشط')
                     ->boolean()
-                    ->label('Active'),
-
-                TextColumn::make('created_at')
-                    ->dateTime()
                     ->sortable(),
 
+                TextColumn::make('created_at')
+                    ->label('تاريخ الإنشاء')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
-
             ->filters([
+                TernaryFilter::make('is_active')
+                    ->label('الحالة')
+                    ->trueLabel('نشط')
+                    ->falseLabel('غير نشط')
+                    ->native(false),
 
-                Tables\Filters\SelectFilter::make('roles')
+                SelectFilter::make('roles')
+                    ->label('الدور')
                     ->relationship('roles', 'name')
-                    ->label('Filter by Role'),
-
-                Tables\Filters\TernaryFilter::make('is_active'),
-
+                    ->multiple()
+                    ->preload(),
             ])
-
             ->actions([
-
-                Tables\Actions\ViewAction::make(),
-
-                Tables\Actions\EditAction::make(),
-
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (User $record): bool => static::canEdit($record)),
                 Tables\Actions\DeleteAction::make()
-                    ->before(function ($record) {
-                        if ($record->hasRole('admin')) {
-                            throw new \Exception('لا يمكن حذف مستخدم Admin');
-                        }
-                    }),
-
+                    ->visible(fn (User $record): bool => static::canDelete($record)),
             ])
-
             ->bulkActions([
-
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-
-            ]);
+                Tables\Actions\DeleteBulkAction::make()
+                    ->visible(fn (): bool => static::canDeleteAny()),
+            ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('roles'));
     }
 
-    // ================= RELATIONS =================
     public static function getRelations(): array
     {
         return [];
     }
 
-    // ================= PAGES =================
     public static function getPages(): array
     {
         return [
@@ -152,5 +151,34 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('view users') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('create users') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('edit users') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        if ((int) $record->id === (int) Auth::id()) {
+            return false;
+        }
+
+        return Auth::user()?->can('delete users') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('delete users') ?? false;
     }
 }
