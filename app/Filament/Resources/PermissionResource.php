@@ -20,6 +20,12 @@ class PermissionResource extends Resource
 
     protected static ?string $navigationGroup = 'إدارة المستخدمين';
 
+    protected static ?string $navigationLabel = 'مهم عمل';
+
+    protected static ?string $modelLabel = 'مهم';
+
+    protected static ?string $pluralModelLabel = 'مهم عمل';
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -45,6 +51,8 @@ class PermissionResource extends Resource
 
                 TextColumn::make('name')
                     ->badge()
+                    ->label('مهمه العمل')
+
                     ->color('info')
                     ->searchable(),
 
@@ -55,16 +63,49 @@ class PermissionResource extends Resource
 
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (Permission $record): bool => static::canEdit($record)),
+
                 Tables\Actions\DeleteAction::make()
+                    ->visible(fn (Permission $record): bool => static::canDelete($record))
                     ->before(fn ($record) => str_contains($record->name, 'admin')
                             ? throw new \Exception('لا يمكن حذف صلاحية مهمة')
                             : null
                     ),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->visible(fn () => static::canDeleteAny()),
             ]);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()?->can('permissions.view') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()?->can('permissions.create') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()?->can('permissions.update') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        if ((int) $record->id === (int) Auth::id()) {
+            return false;
+        }
+
+        return Auth::user()?->can('permissions.delete') ?? false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('delete permissions') ?? false;
     }
 
     public static function getPages(): array
@@ -74,34 +115,5 @@ class PermissionResource extends Resource
             'create' => PermissionResource\Pages\CreatePermission::route('/create'),
             'edit' => PermissionResource\Pages\EditPermission::route('/{record}/edit'),
         ];
-    }
-
-    public static function canViewAny(): bool
-    {
-        return Auth::user()?->can('view permissions') ?? false;
-    }
-
-    public static function canCreate(): bool
-    {
-        return Auth::user()?->can('create permissions') ?? false;
-    }
-
-    public static function canEdit($record): bool
-    {
-        return Auth::user()?->can('edit permissions') ?? false;
-    }
-
-    public static function canDelete($record): bool
-    {
-        if ((int) $record->id === (int) Auth::id()) {
-            return false;
-        }
-
-        return Auth::user()?->can('delete permissions') ?? false;
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return Auth::user()?->can('delete permissions') ?? false;
     }
 }

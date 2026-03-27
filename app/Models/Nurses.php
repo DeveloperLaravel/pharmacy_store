@@ -9,7 +9,13 @@ class Nurses extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'phone', 'department_id'];
+    protected $fillable = [
+        'name',
+        'phone',
+        'gender',
+        'department_id',
+        'is_active',
+    ];
 
     public function department()
     {

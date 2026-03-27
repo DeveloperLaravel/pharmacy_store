@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('phone')->nullable();
+            $table->enum('gender', ['male', 'female']);    // الجنس
             $table->foreignId('department_id')->constrained()->cascadeOnDelete();
+            $table->boolean('is_active')->default(true); // نشطة/غير نشطة
             $table->timestamps();
         });
     }

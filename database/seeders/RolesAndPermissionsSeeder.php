@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -17,121 +16,164 @@ class RolesAndPermissionsSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | Permissions (مقسمة بشكل احترافي)
+        | 1. تعريف Modules
         |--------------------------------------------------------------------------
         */
-        $permissions = [
-
-            // Roles & Permissions
-            'view roles',
-            'create roles',
-            'edit roles',
-            'delete roles',
-
-            'view permissions',
-            'create permissions',
-            'edit permissions',
-            'delete permissions',
-
-            // Users
-            'view users',
-            'create users',
-            'edit users',
-            'delete users',
-
-            // Categories
-            // 'view categories',
-            // 'create categories',
-            // 'edit categories',
-            // 'delete categories',
-
-            // Medicines
-            // 'view medicines',
-            // 'create medicines',
-            // 'edit medicines',
-            // 'delete medicines',
-
-            // department
-            'view department',
-            'create department',
-            'edit department',
-            'delete department',
+        $modules = [
+            'users',
+            'roles',
+            'permissions',
+            'departments',
+            'doctors',
+            'patients',
+            'appointments',
+            'visits',
+            'medical_records',
+            'medicines',
+            'prescriptions',
+            'lab_tests',
+            'radiologies',
+            'rooms',
+            'bed_assignments',
+            'invoices',
+            'invoice_items',
+            'recharge_cards',
         ];
 
-        // إنشاء Permissions
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate([
-                'name' => $permission,
-                'guard_name' => 'web',
-            ]);
+        /*
+        |--------------------------------------------------------------------------
+        | 2. تعريف Actions
+        |--------------------------------------------------------------------------
+        */
+        $actions = ['view', 'create', 'update', 'delete'];
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. إنشاء كل الصلاحيات
+        |--------------------------------------------------------------------------
+        */
+        foreach ($modules as $module) {
+            foreach ($actions as $action) {
+                Permission::firstOrCreate([
+                    'name' => "$module.$action",
+                ]);
+            }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Roles
+        | 4. إنشاء الأدوار
         |--------------------------------------------------------------------------
         */
         $roles = [
             'super-admin',
             'admin',
+            'doctor',
+            'reception',
+            'nurse',
             'pharmacist',
-            'inventory-manager',
+            'lab',
+            'radiology',
+            'accountant',
         ];
 
         foreach ($roles as $role) {
-            Role::firstOrCreate([
-                'name' => $role,
-                'guard_name' => 'web',
-            ]);
+            Role::firstOrCreate(['name' => $role]);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Assign Permissions to Roles
+        | 5. إعطاء الصلاحيات
         |--------------------------------------------------------------------------
         */
 
-        // Super Admin -> كل شيء
-        Role::findByName('super-admin')->syncPermissions(Permission::all());
+        // 🔥 super-admin (كل شيء)
+        $superAdmin = Role::findByName('super-admin');
+        $superAdmin->syncPermissions(Permission::all());
 
-        // Admin
-        Role::findByName('admin')->syncPermissions([
-            'view users',
-            'create users',
-            'edit users',
-            'delete users',
+        // 🔥 admin
+        $admin = Role::findByName('admin');
+        $admin->syncPermissions(Permission::all());
+
+        // 👨‍⚕️ doctor
+        $doctor = Role::findByName('doctor');
+        $doctor->syncPermissions([
+            'patients.view',
+            'appointments.view',
+            'visits.view',
+            'visits.update',
+            'medical_records.view',
+            'medical_records.create',
+            'medical_records.update',
+            'prescriptions.create',
+            'prescriptions.view',
+            'lab_tests.view',
+            'radiologies.view',
         ]);
 
-        // Pharmacist
-        Role::findByName('pharmacist')->syncPermissions([
-            'view medicines',
-            'create medicines',
-            'edit medicines',
-            'view stock',
-            'create stock',
+        // 🧑‍💼 reception
+        $reception = Role::findByName('reception');
+        $reception->syncPermissions([
+            'patients.view',
+            'patients.create',
+            'patients.update',
+
+            'appointments.view',
+            'appointments.create',
+            'appointments.update',
+
+            'visits.create',
+            'visits.view',
+
+            'bed_assignments.create',
+            'bed_assignments.view',
         ]);
 
-        // Inventory Manager
-        Role::findByName('inventory-manager')->syncPermissions([
-            'view stock',
-            'create stock',
-            'edit stock',
-            'delete stock',
+        // 👩‍⚕️ nurse
+        $nurse = Role::findByName('nurse');
+        $nurse->syncPermissions([
+            'patients.view',
+            'visits.view',
+            'bed_assignments.view',
+            'bed_assignments.update',
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Assign Role to User
-        |--------------------------------------------------------------------------
-        */
-        $user = User::where('email', 'admin@admin.com')->first();
+        // 💊 pharmacist
+        $pharmacist = Role::findByName('pharmacist');
+        $pharmacist->syncPermissions([
+            'medicines.view',
+            'medicines.create',
+            'medicines.update',
 
-        if (! $user) {
-            $user = User::first();
-        }
+            'prescriptions.view',
+        ]);
 
-        if ($user) {
-            $user->assignRole('super-admin');
-        }
+        // 🧪 lab
+        $lab = Role::findByName('lab');
+        $lab->syncPermissions([
+            'lab_tests.view',
+            'lab_tests.update',
+        ]);
+
+        // 🩻 radiology
+        $radiology = Role::findByName('radiology');
+        $radiology->syncPermissions([
+            'radiologies.view',
+            'radiologies.update',
+        ]);
+
+        // 💰 accountant
+        $accountant = Role::findByName('accountant');
+        $accountant->syncPermissions([
+            'invoices.view',
+            'invoices.create',
+            'invoices.update',
+
+            'invoice_items.view',
+            'invoice_items.create',
+
+            'recharge_cards.view',
+            'recharge_cards.create',
+        ]);
     }
 }

@@ -17,6 +17,12 @@ class DoctorResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'الدكتره';
+
+    protected static ?string $pluralModelLabel = 'الدكتره';
+
+    protected static ?string $modelLabel = 'اظاف دكتور';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -87,28 +93,19 @@ class DoctorResource extends Resource
         ];
     }
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListDoctors::route('/'),
-            'create' => Pages\CreateDoctor::route('/create'),
-            'edit' => Pages\EditDoctor::route('/{record}/edit'),
-        ];
-    }
-
     public static function canViewAny(): bool
     {
-        return Auth::user()?->can('view doctor') ?? false;
+        return Auth::user()?->can('doctors.view') ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return Auth::user()?->can('create doctor') ?? false;
+        return Auth::user()?->can('doctors.create') ?? false;
     }
 
     public static function canEdit($record): bool
     {
-        return Auth::user()?->can('edit doctor') ?? false;
+        return Auth::user()?->can('doctors.update') ?? false;
     }
 
     public static function canDelete($record): bool
@@ -117,11 +114,20 @@ class DoctorResource extends Resource
             return false;
         }
 
-        return Auth::user()?->can('delete doctor') ?? false;
+        return Auth::user()?->can('doctors.delete') ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return Auth::user()?->can('delete doctor') ?? false;
+        return Auth::user()?->can('doctors.deleteAny') ?? false;
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListDoctors::route('/'),
+            'create' => Pages\CreateDoctor::route('/create'),
+            'edit' => Pages\EditDoctor::route('/{record}/edit'),
+        ];
     }
 }

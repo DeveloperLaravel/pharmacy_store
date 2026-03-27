@@ -17,6 +17,12 @@ class DepartmentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'القسام';
+
+    protected static ?string $pluralModelLabel = 'قسام';
+
+    protected static ?string $modelLabel = 'اظاف قسم';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -106,11 +112,11 @@ class DepartmentResource extends Resource
 
                 // ✏️ تعديل
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record): bool => static::canEdit($record)),
+                    ->visible(fn (Department $record): bool => static::canEdit($record)),
 
                 // 🗑️ حذف
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn ($record): bool => static::canDelete($record)),
+                    ->visible(fn (Department $record): bool => static::canDelete($record)),
             ])
 
             ->bulkActions([
@@ -139,17 +145,17 @@ class DepartmentResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->can('view department') ?? false;
+        return Auth::user()?->can('departments.view') ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return Auth::user()?->can('create department') ?? false;
+        return Auth::user()?->can('departments.create') ?? false;
     }
 
     public static function canEdit($record): bool
     {
-        return Auth::user()?->can('dit department') ?? false;
+        return Auth::user()?->can('departments.update') ?? false;
     }
 
     public static function canDelete($record): bool
@@ -158,11 +164,11 @@ class DepartmentResource extends Resource
             return false;
         }
 
-        return Auth::user()?->can('delete department') ?? false;
+        return Auth::user()?->can('department.delete') ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return Auth::user()?->can('delete department') ?? false;
+        return Auth::user()?->can('department.delete') ?? false;
     }
 }

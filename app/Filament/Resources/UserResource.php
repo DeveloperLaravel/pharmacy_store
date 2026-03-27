@@ -27,9 +27,13 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'المستخدمون';
+    protected static ?string $navigationLabel = 'حسابات';
 
     protected static ?string $navigationGroup = 'إدارة المستخدمين';
+
+    protected static ?string $modelLabel = 'اظافة حسابات';
+
+    protected static ?string $pluralModelLabel = 'إدارة حسابات';
 
     protected static ?int $navigationSort = 1;
 
@@ -73,7 +77,7 @@ class UserResource extends Resource
                         ->inline(false),
 
                     Select::make('roles')
-                        ->label('الأدوار')
+                        ->label('الواظيفة')
                         ->relationship('roles', 'name')
                         ->multiple()
                         ->preload()
@@ -88,16 +92,20 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
+                    ->label('اسم')
+
                     ->sortable()
                     ->weight('medium'),
 
                 TextColumn::make('email')
                     ->searchable()
+                    ->label('البريد الكترواني')
+
                     ->sortable()
                     ->copyable(),
 
                 TextColumn::make('roles.name')
-                    ->label('الأدوار')
+                    ->label('الواظيفة')
                     ->badge()
                     ->separator(',')
                     ->color('info'),
@@ -121,7 +129,7 @@ class UserResource extends Resource
                     ->native(false),
 
                 SelectFilter::make('roles')
-                    ->label('الدور')
+                    ->label('الواظيفة')
                     ->relationship('roles', 'name')
                     ->multiple()
                     ->preload(),
@@ -144,28 +152,19 @@ class UserResource extends Resource
         return [];
     }
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListUsers::route('/'),
-            'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
-        ];
-    }
-
     public static function canViewAny(): bool
     {
-        return Auth::user()?->can('view users') ?? false;
+        return Auth::user()?->can('users.view') ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return Auth::user()?->can('create users') ?? false;
+        return Auth::user()?->can('users.create') ?? false;
     }
 
     public static function canEdit($record): bool
     {
-        return Auth::user()?->can('edit users') ?? false;
+        return Auth::user()?->can('users.update') ?? false;
     }
 
     public static function canDelete($record): bool
@@ -174,11 +173,20 @@ class UserResource extends Resource
             return false;
         }
 
-        return Auth::user()?->can('delete users') ?? false;
+        return Auth::user()?->can('users.delete') ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return Auth::user()?->can('delete users') ?? false;
+        return Auth::user()?->can('users.deleteAny') ?? false;
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
+        ];
     }
 }

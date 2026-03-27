@@ -19,7 +19,11 @@ class RoleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationLabel = 'الأدوار';
+    protected static ?string $navigationLabel = 'الواظيفة';
+
+    protected static ?string $modelLabel = 'الواظيفة';
+
+    protected static ?string $pluralModelLabel = 'الواظيفة عمل';
 
     protected static ?string $navigationGroup = 'إدارة المستخدمين';
 
@@ -30,7 +34,7 @@ class RoleResource extends Resource
             Card::make()->schema([
 
                 TextInput::make('name')
-                    ->label('اسم الدور')
+                    ->label('اسم الواظيفة')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->placeholder('مثال: admin'),
@@ -52,6 +56,7 @@ class RoleResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
+                    ->label('واظيفة العمل')
                     ->sortable()
                     ->badge()
                     ->color('success'),
@@ -73,9 +78,9 @@ class RoleResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn () => static::canEdit(null)),
+                    ->visible(fn (Role $record): bool => static::canEdit($record)),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => static::canDelete(null)),
+                    ->visible(fn (Role $record): bool => static::canDelete($record)),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
@@ -90,27 +95,27 @@ class RoleResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::user()?->can('view roles') ?? false;
+        return Auth::user()?->can('roles.view') ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return Auth::user()?->can('create roles') ?? false;
+        return Auth::user()?->can('roles.create') ?? false;
     }
 
     public static function canEdit($record): bool
     {
-        return Auth::user()?->can('edit roles') ?? false;
+        return Auth::user()?->can('roles.update') ?? false;
     }
 
     public static function canDelete($record): bool
     {
-        return Auth::user()?->can('delete roles') ?? false;
+        return Auth::user()?->can('roles.delete') ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return Auth::user()?->can('delete roles') ?? false;
+        return Auth::user()?->can('roles.delete') ?? false;
     }
 
     public static function getPages(): array

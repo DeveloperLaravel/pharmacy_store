@@ -12,26 +12,26 @@ class DoctorPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('view doctor');
+        return $user->can('doctors.view');
     }
 
     public function view(User $user, Doctor $doctor)
     {
-        return $user->can('view doctor');
+        return $user->can('doctors.view');
     }
 
     public function create(User $user)
     {
-        return $user->can('create doctor');
+        return $user->can('doctors.create');
     }
 
     public function update(User $user, Doctor $doctor)
     {
-        return $user->can('edit doctor');
+        return $user->can('doctors.update');
     }
 
     public function delete(User $user, Doctor $doctor)
     {
-        return $user->can('delete doctor');
+        return $user->can('doctors.delete');
     }
 }
